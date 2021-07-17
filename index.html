@@ -57,6 +57,9 @@
                 if (data.characters[i].skills && data.characters[i].skills[j]) {
                     skillsValueInput.value = data.characters[i].skills[j];
                 }
+                else {
+                    skillsValueInput.value = 0;
+                }
                 skillsValueInput.dataset.skillIndex = j;
                 skillsValueInput.addEventListener("change", updateCharacterSkillValue);
                 modifierNode.appendChild(skillsValueInput);
