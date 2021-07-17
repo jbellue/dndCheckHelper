@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DM helper</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <table>
+        <thead>
+            <tr id="tableCharactersHead">
+                <th rowspan="3"></th>
+                <th id="thSkills" colspan="0">
+                    Skills
+                    <button id="btnAddSkill">➕</button>
+                </th>
+            </tr>
+            <tr id="trSkills">
+            </tr>
+            <tr id="trModRoll">
+            </tr>
+        </thead>
+        <tbody id="tableCharactersBody">
+        </tbody>
+        <tfoot>
+            <tr id="tableCharactersFooterRow">
+            </tr>
+        </tfoot>
+    </table>
+    <button type="button" id="characterCreateBtn">➕</button>
+
+    <script>
+        let data = {};
+        if (localStorage.getItem("data")) {
+            data = JSON.parse(localStorage.getItem("data"));
+        }
+        else {
+            data.characters = [];
+            data.skills = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"];
+        }
+
+        const createRow = (i) => {
+            let rowNode = document.createElement("tr");
+            rowNode.dataset.characterIndex = i;
+            let nameNode = document.createElement("td");
+            nameNode.contentEditable="true";
+            nameNode.addEventListener("keyup", updateName);
+            let nameTextNode = document.createTextNode(data.characters[i].charName);
+            nameNode.appendChild(nameTextNode);
+            rowNode.appendChild(nameNode);
+
+            // Add all the created skills
+            for(let j = 0; j < data.skills.length; ++j) {
+                let modifierNode = document.createElement("td");
+                let skillsValueInput = document.createElement("input");
+                skillsValueInput.type = "number";
+                if (data.characters[i].skills && data.characters[i].skills[j]) {
+                    skillsValueInput.value = data.characters[i].skills[j];
+                }
+                skillsValueInput.dataset.skillIndex = j;
+                skillsValueInput.addEventListener("change", updateCharacterSkillValue);
+                modifierNode.appendChild(skillsValueInput);
+                rowNode.appendChild(modifierNode);
+
+                let rollNode = document.createElement("td");
+                rollNode.appendChild(document.createTextNode("roll"));
+                rowNode.appendChild(rollNode);
+            }
+
+            let actionsNode = document.createElement("td");
+            let deleteNode = document.createElement("button");
+            deleteNode.innerHTML = "🗑️";
+            deleteNode.classList += "deleteBtn";
+            deleteNode.addEventListener ("click", deleteCharacter);
+            actionsNode.appendChild(deleteNode);
+            rowNode.appendChild(actionsNode);
+
+            return rowNode;
+        };
+
+        const displayTable = () => {
+            const tbody = document.getElementById("tableCharactersBody");
+            tbody.innerHTML = "";
+            document.getElementById("trSkills").innerHTML = "";
+            document.getElementById("trModRoll").innerHTML = "";
+            let footerRow = document.getElementById("tableCharactersFooterRow");
+            footerRow.innerHTML = "";
+            let td = document.createElement("td");
+            td.appendChild(document.createTextNode("DC"));
+            let input = document.createElement("input");
+            input.type = "number";
+            input.id = "inputDifficulty";
+            td.appendChild(input);
+            footerRow.appendChild(td);
+
+            data.skills.forEach((e, i) => createNewSkill(e, i));
+            let i = 0;
+            while (data.characters[i] != undefined) {
+                let rowNode = createRow(i);
+                tbody.appendChild(rowNode);
+                i++;
+            }
+        }
+
+        const storeData = () => {
+            localStorage.setItem("data", JSON.stringify(data));
+        };
+
+        const addSkillToCharacters = () => {
+            const tbody = document.getElementById("tableCharactersBody");
+
+            for (let i=0; i < tbody.rows.length; i++) {
+                let actionNode = tbody.rows[i].getElementsByClassName("deleteBtn")[0];
+                let newSkillNode = actionNode.parentNode.parentNode.insertBefore(document.createElement("td"), actionNode.parentNode);
+                let skillsValueInput = document.createElement("input");
+                skillsValueInput.type = "number";
+                skillsValueInput.value = "0";
+                skillsValueInput.addEventListener("change", updateCharacterSkillValue);
+                skillsValueInput.dataset.skillIndex = data.skills.length - 1;
+                newSkillNode.appendChild(skillsValueInput);
+
+                let rollNode = actionNode.parentNode.parentNode.insertBefore(document.createElement("td"), actionNode.parentNode);
+                rollNode.appendChild(document.createTextNode("roll"));
+                data.characters[i].skills[skillsValueInput.dataset.skillIndex] = skillsValueInput.value;
+                storeData();
+            }
+        };
+
+        const deleteCharacter = (e) => {
+            data.characters.splice(e.target.parentElement.parentElement.dataset.characterIndex, 1);
+            storeData();
+            const tbody = document.getElementById("tableCharactersBody");
+            tbody.deleteRow(e.target.parentElement.parentElement.dataset.characterIndex);
+
+            // update the data-id of next nodes
+            for (let i=e.target.parentElement.parentElement.dataset.characterIndex; i < tbody.rows.length; ++i) {
+                tbody.rows[i].dataset.characterIndex = i;
+            }
+        };
+
+        const updateCharacterSkillValue = e => {
+            if (data.characters[e.target.parentElement.parentElement.dataset.characterIndex].skills === undefined) {
+                data.characters[e.target.parentElement.parentElement.dataset.characterIndex].skills = [];
+            }
+            data.characters[e.target.parentElement.parentElement.dataset.characterIndex].skills[e.target.dataset.skillIndex] = e.target.value;
+            storeData();
+        };
+        const updateName = e => {
+            data.characters[e.target.parentElement.dataset.characterIndex].charName = e.target.innerText;
+            storeData();
+        };
+
+        const updateSkillName = e => {
+            data.skills[e.target.parentElement.dataset.skillIndex] = e.target.innerText;
+            storeData();
+        };
+
+        const deleteSkill = e => {
+            // delete the data in the datastore
+            let skillIndex = parseInt(e.target.dataset.skillIndex);
+            data.skills.splice(skillIndex, 1);
+            data.characters.forEach(character => {
+                character.skills.splice(skillIndex, 1);
+            });
+            storeData();
+
+            displayTable();
+        };
+
+        const rollDie = e => {
+            const skillIndex = parseInt(e.target.dataset.skillIndex);
+            const DC = parseInt(document.getElementById("inputDifficulty").value);
+            for (let i=0; i < data.characters.length; ++i) {
+
+                const modifier = parseInt(document.querySelector(`tbody tr:nth-child(${i + 1}) td:nth-child(${skillIndex * 2 + 2}) input`).value);
+                const roll = Math.floor(Math.random() * 20 + 1);
+                document.querySelector(`tbody tr:nth-child(${i + 1}) td:nth-child(${skillIndex * 2 + 3})`).innerText = roll;
+                const score = roll + modifier;
+
+                let msg = data.characters[i].charName;
+                if(score >= DC) {
+                    msg += ` passes (rolled a ${roll} + mod ${modifier} = total ${score})`;
+                }
+                else {
+                    msg += ` fails (rolled a ${roll} + mod ${modifier} = total ${score})`;
+                }
+                if(roll === 20) {
+                    msg += " with a critical success!";
+                }
+                if(roll === 1) {
+                    msg += " with a critical failure!";
+                }
+                console.log(msg);
+            }
+        }
+        const addDiceToSkill = index => {
+            const tfoot = document.getElementById("tableCharactersFooterRow");
+            const td = document.createElement("td");
+            td.colSpan = 2;
+            const button = document.createElement("button");
+            button.textContent = "🎲";
+            button.dataset.skillIndex = index;
+            button.addEventListener("click", rollDie);
+            td.appendChild(button);
+            tfoot.appendChild(td);
+
+        };
+        const createNewSkill = (skillName, index) => {
+            const tr = document.getElementById("trSkills");
+            const th = document.createElement("th");
+            th.dataset.skillIndex = index ?? data.skills.length;
+            let selectText = false;
+            if (typeof(skillName) !== "string") {
+                skillName = "Skill";
+                //newly created skill
+                data.skills.push(skillName);
+                storeData();
+                selectText = true;
+            }
+            let headerSkillName = document.createElement("div");
+            headerSkillName.addEventListener("keyup", updateSkillName);
+            headerSkillName.appendChild(document.createTextNode(skillName));
+            headerSkillName.contentEditable = "true";
+
+            const trModRoll = document.getElementById("trModRoll");
+            const modifierth = document.createElement("th");
+            const rollth = document.createElement("th");
+            modifierth.dataset.skillIndex = th.dataset.skillIndex;
+            modifierth.appendChild(document.createTextNode("Modifier"));
+            rollth.dataset.skillIndex = th.dataset.skillIndex;
+            rollth.appendChild(document.createTextNode("Dice result"));
+            trModRoll.appendChild(modifierth);
+            trModRoll.appendChild(rollth);
+            th.appendChild(headerSkillName);
+            tr.appendChild(th);
+            th.colSpan = 2;
+
+            // Select the text of the new skill
+            if (selectText && window.getSelection) {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(th);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+            document.getElementById("thSkills").colSpan = data.skills.length * 2;
+
+            const button = document.createElement("button");
+            button.textContent = "🗑️";
+            button.dataset.skillIndex = th.dataset.skillIndex;
+            button.addEventListener("click", deleteSkill);
+            th.appendChild(button);
+
+            addSkillToCharacters();
+
+            addDiceToSkill(th.dataset.skillIndex);
+        }
+
+        document.getElementById("characterCreateBtn").addEventListener("click", (e) => {
+            data.characters.push({ charName: ""});
+            storeData();
+            const tbody = document.getElementById("tableCharactersBody");
+            let rowNode = createRow(tbody.rows.length);
+            tbody.appendChild(rowNode);
+            return false;
+        });
+
+        document.getElementById("btnAddSkill").addEventListener("click", createNewSkill);
+
+        displayTable();
+      </script>
+</body>
+</html>
