@@ -82,6 +82,8 @@
         };
 
         const displayTable = () => {
+            const dcInput = document.getElementById("inputDifficulty");
+            const dc = dcInput ? dcInput.value: 15;
             const tbody = document.getElementById("tableCharactersBody");
             tbody.innerHTML = "";
             document.getElementById("trSkills").innerHTML = "";
@@ -93,6 +95,7 @@
             let input = document.createElement("input");
             input.type = "number";
             input.id = "inputDifficulty";
+            input.value = dc;
             td.appendChild(input);
             footerRow.appendChild(td);
 
