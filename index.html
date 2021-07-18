@@ -263,7 +263,12 @@
         }
 
         document.getElementById("characterCreateBtn").addEventListener("click", (e) => {
-            data.characters.push({ charName: ""});
+            const character = {
+                charName: "",
+                skills: []
+            };
+            const newCharacter = Object.create(character);
+            data.characters.push(newCharacter);
             storeData();
             const tbody = document.getElementById("tableCharactersBody");
             let rowNode = createRow(tbody.rows.length);
