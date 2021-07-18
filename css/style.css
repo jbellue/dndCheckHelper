@@ -1,3 +1,10 @@
 table, th, td {
-	border: 1px solid black;
+    border: 1px solid black;
+}
+
+td.success {
+    background-color: green;
+}
+td.fail {
+    background-color: red;
 }

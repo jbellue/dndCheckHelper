@@ -173,30 +173,38 @@
             displayTable();
         };
 
+        const clearAllDiceRolls = () => {
+            const diceResultCells = document.querySelectorAll("tbody tr td:nth-child(odd):not(:first-child)");
+            [...diceResultCells].forEach(cell => {
+                cell.classList = "";
+                cell.innerText = "🎲";
+            });
+        };
+
         const rollDie = e => {
+            clearAllDiceRolls();
             const skillIndex = parseInt(e.target.dataset.skillIndex);
             const DC = parseInt(document.getElementById("inputDifficulty").value);
             for (let i=0; i < data.characters.length; ++i) {
 
                 const modifier = parseInt(document.querySelector(`tbody tr:nth-child(${i + 1}) td:nth-child(${skillIndex * 2 + 2}) input`).value);
-                const roll = Math.floor(Math.random() * 20 + 1);
-                document.querySelector(`tbody tr:nth-child(${i + 1}) td:nth-child(${skillIndex * 2 + 3})`).innerText = roll;
+                let roll = Math.floor(Math.random() * 20 + 1);
                 const score = roll + modifier;
 
-                let msg = data.characters[i].charName;
-                if(score >= DC) {
-                    msg += ` passes (rolled a ${roll} + mod ${modifier} = total ${score})`;
-                }
-                else {
-                    msg += ` fails (rolled a ${roll} + mod ${modifier} = total ${score})`;
-                }
                 if(roll === 20) {
-                    msg += " with a critical success!";
+                    roll = `${roll} 🌟`;
                 }
                 if(roll === 1) {
-                    msg += " with a critical failure!";
+                    roll = `${roll} 💣`;
                 }
-                console.log(msg);
+                const diceResultCell = document.querySelector(`tbody tr:nth-child(${i + 1}) td:nth-child(${skillIndex * 2 + 3})`);
+                diceResultCell.innerText = roll;
+                if(score >= DC) {
+                    diceResultCell.classList = "success";
+                }
+                else {
+                    diceResultCell.classList = "fail";
+                }
             }
         }
         const addDiceToSkill = index => {
