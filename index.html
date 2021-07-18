@@ -66,7 +66,7 @@
                 rowNode.appendChild(modifierNode);
 
                 let rollNode = document.createElement("td");
-                rollNode.appendChild(document.createTextNode("roll"));
+                rollNode.appendChild(document.createTextNode("🎲"));
                 rowNode.appendChild(rollNode);
             }
 
@@ -126,7 +126,7 @@
                 newSkillNode.appendChild(skillsValueInput);
 
                 let rollNode = actionNode.parentNode.parentNode.insertBefore(document.createElement("td"), actionNode.parentNode);
-                rollNode.appendChild(document.createTextNode("roll"));
+                rollNode.appendChild(document.createTextNode("🎲"));
                 data.characters[i].skills[skillsValueInput.dataset.skillIndex] = skillsValueInput.value;
                 storeData();
             }
