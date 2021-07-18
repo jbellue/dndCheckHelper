@@ -106,7 +106,7 @@
                 tbody.appendChild(rowNode);
                 i++;
             }
-        }
+        };
 
         const storeData = () => {
             localStorage.setItem("data", JSON.stringify(data));
@@ -206,7 +206,8 @@
                     diceResultCell.classList = "fail";
                 }
             }
-        }
+        };
+
         const addDiceToSkill = index => {
             const tfoot = document.getElementById("tableCharactersFooterRow");
             const td = document.createElement("td");
@@ -268,7 +269,7 @@
             addSkillToCharacters();
 
             addDiceToSkill(th.dataset.skillIndex);
-        }
+        };
 
         document.getElementById("characterCreateBtn").addEventListener("click", (e) => {
             const character = {
